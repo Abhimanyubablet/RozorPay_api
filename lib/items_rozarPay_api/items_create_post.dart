@@ -1,34 +1,31 @@
-import 'package:api_flutter_rozarpay/CustomerById.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'customer_createPost_datamodel.dart';
-import 'customer_datamodel.dart';
-import 'customer_provider_data.dart';
+import 'item_by_id.dart';
+import 'item_class_provider.dart';
+import 'item_create_datamodel.dart';
 
-Entity? entityInstance;
-
-class CustomerCrud extends StatefulWidget {
-  const CustomerCrud({Key? key}) : super(key: key);
+class ItemCreatePost extends StatefulWidget {
+  const ItemCreatePost({super.key});
 
   @override
-  State<CustomerCrud> createState() => _CustomerCrudState();
+  State<ItemCreatePost> createState() => _ItemCreatePostState();
 }
 
-class _CustomerCrudState extends State<CustomerCrud> {
+class _ItemCreatePostState extends State<ItemCreatePost> {
   final TextEditingController nameController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController contactController = TextEditingController();
-
+  final TextEditingController descController = TextEditingController();
+  final TextEditingController amountController = TextEditingController();
+  final TextEditingController currencyController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider<CustomersProvider>(create: (_) => CustomersProvider()),
+        ChangeNotifierProvider<ItemsDataProvider>(create: (_) => ItemsDataProvider()),
       ],
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Create, Update, Delete List'),
+          title: Text('Create Post List'),
         ),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -39,7 +36,7 @@ class _CustomerCrudState extends State<CustomerCrud> {
                 'Create a new post:',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              Consumer<CustomersProvider>(
+              Consumer<ItemsDataProvider>(
                 builder: (context, postProvider, _) {
                   return Column(
                     children: [
@@ -48,33 +45,35 @@ class _CustomerCrudState extends State<CustomerCrud> {
                         decoration: InputDecoration(labelText: 'Name'),
                       ),
                       TextField(
-                        controller: emailController,
-                        decoration: InputDecoration(labelText: 'Email'),
+                        controller: descController,
+                        decoration: InputDecoration(labelText: 'Description'),
                       ),
                       TextField(
-                        controller: contactController,
-                        decoration: InputDecoration(labelText: 'Contact'),
+                        controller: amountController,
+                        decoration: InputDecoration(labelText: 'Amount'),
+                      ),
+                      TextField(
+                        controller: currencyController,
+                        decoration: InputDecoration(labelText: 'Currency'),
                       ),
                       SizedBox(height: 16),
                       ElevatedButton(
                         onPressed: () async {
-                          final newPost = CustomersCreatePost(
+                          final newPost = ItemsCreatePostModel(
                             name: nameController.text,
-                            email: emailController.text,
-                            contact: contactController.text,
-                            failExisting: '',
-                            gstin: "12ABCDE2356F7GH",
-                            notes: Notes(
-                              notesKey1: "Tea, Earl Grey, Hot",
-                              notesKey2: "Tea, Earl Grey… decaf.",
-                            ),
+                            description: descController.text,
+                            amount: int.parse(amountController.text),
+                            currency: currencyController.text,
+
+
                           );
-                          await postProvider.createPost(newPost, context);
+                          await postProvider.itemsCreatePost(newPost, context);
 
                           // Clear text controllers after posting
                           nameController.clear();
-                          emailController.clear();
-                          contactController.clear();
+                          descController.clear();
+                          amountController.clear();
+                          currencyController.clear();
                         },
                         child: Text('Add Post'),
                       ),
@@ -87,7 +86,7 @@ class _CustomerCrudState extends State<CustomerCrud> {
               Center(
                 child: ElevatedButton(
                     onPressed: (){
-                      Navigator.push(context, MaterialPageRoute(builder: (context)=>CustomerById()));
+                      Navigator.push(context, MaterialPageRoute(builder: (context)=>ItemById()));
                     },
                     child: Text('Customer By Id')),
               )

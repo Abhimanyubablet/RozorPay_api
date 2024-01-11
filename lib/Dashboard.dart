@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'customer_homepage.dart';
+import 'items_rozarPay_api/item_homePage.dart';
 
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
@@ -26,7 +27,11 @@ class _DashboardState extends State<Dashboard> {
                  } ,
                  child: Text("Customer Rozarpay api")),
 
-
+             ElevatedButton(
+                 onPressed: (){
+                   Navigator.push(context, MaterialPageRoute(builder: (context)=>ItemHomePage()));
+                 } ,
+                 child: Text("Items Rozarpay api")),
 
            ],
          ),

@@ -12,14 +12,19 @@ class CustomerHomePage extends StatefulWidget {
 }
 
 class _CustomerHomePageState extends State<CustomerHomePage> {
+  TextEditingController nameController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
+  TextEditingController contactController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Customer List'),
       ),
+
       body: FutureProvider<List<Item>?>(
-        create: (_) => fetchData(),
+        create: (_) => CustomersProvider().fetchData(),
         catchError: (_, error) {
           print('Error fetching data: $error');
           return null; // Return null in case of an error
@@ -33,9 +38,29 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
               return ListView.builder(
                 itemCount: items.length,
                 itemBuilder: (context, index) {
-                  return ListTile(
-                    title: Text(items[index].name.toString()),
-                    subtitle: Text(items[index].email.toString()),
+                  return Card(
+                    child: ListTile(
+                      title: Text(items[index].name.toString()),
+                      subtitle: Text(items[index].contact.toString()),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.edit),
+                            onPressed: () {
+                              _showUpdateDialog(context, items[index]);
+                            },
+                          ),
+                          // IconButton(
+                          //   icon: Icon(Icons.delete),
+                          //   onPressed: () {
+                          //     // Handle delete action
+                          //     // You can show a confirmation dialog and delete the item if confirmed.
+                          //   },
+                          // ),
+                        ],
+                      ),
+                    ),
                   );
                 },
               );
@@ -43,6 +68,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
           },
         ),
       ),
+
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           _handleFloatingActionButton(context);
@@ -53,31 +79,96 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
     );
   }
 
-  Future<List<Item>> fetchData() async {
-    String username = 'rzp_test_spCetGguNd0T6X';
-    String password = 'z1ibOqW8JOo5sjDpqQ7bR3RL';
-    String basicAuth =
-        'Basic ' + base64Encode(utf8.encode('$username:$password'));
+  void _showUpdateDialog(BuildContext context, Item currentItem) {
+    nameController.text = currentItem.name ?? '';
+    emailController.text = currentItem.email ?? '';
+    contactController.text = currentItem.contact ?? '';
 
-    final response = await http.get(
-      Uri.parse('https://api.razorpay.com/v1/customers'),
-      headers: {"Authorization": basicAuth},
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Update User'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(
+                  labelText: 'Name',
+                  hintText: currentItem.name,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: emailController,
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  hintText: currentItem.email,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: contactController,
+                decoration: InputDecoration(
+                  labelText: 'Contact',
+                  hintText: currentItem.contact,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                _updateCustomer(context, currentItem.id.toString());
+                Navigator.pop(context);
+              },
+              child: const Text('Update'),
+            ),
+          ],
+        );
+      },
     );
+  }
 
-    if (response.statusCode == 200) {
-      dynamic data = json.decode(response.body);
-      List<dynamic> items = data['items'];
-      var itemList = items.map((e) => Item.fromJson(e)).toList();
-      return itemList;
+  Future<void> _updateCustomer(BuildContext context, String customerId) async {
+    final String newName = nameController.text.trim();
+    final String newEmail = emailController.text.trim();
+    final String newContact = contactController.text.trim();
+
+    if (newName.isNotEmpty && newEmail.isNotEmpty && newContact.isNotEmpty ) {
+      try {
+
+        await Provider.of<CustomersProvider>(context, listen: false).updateCustomer(customerId, newName, newEmail,newContact,);
+
+        // Optionally, clear the text fields after successful update
+        nameController.clear();
+        emailController.clear();
+        contactController.clear();
+      } catch (e) {
+        print('Error updating customer: $e');
+        // Handle error
+      }
     } else {
-      throw Exception('Failed to load data');
+      // Display a message or alert about empty fields
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill in all fields'),
+        ),
+      );
     }
   }
+
+
 
   void _handleFloatingActionButton(BuildContext context) {
     Navigator.push(
         context, MaterialPageRoute(builder: (context) => CustomerCrud()));
   }
-
-
 }

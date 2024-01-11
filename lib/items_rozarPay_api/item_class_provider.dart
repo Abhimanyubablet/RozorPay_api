@@ -5,23 +5,23 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart ' as http;
 
-import 'customer_createPost_datamodel.dart';
-import 'customer_datamodel.dart';
-
-class CustomersProvider extends ChangeNotifier{
-  List<CustomersCreatePost> _posts = [];
-  List<CustomersCreatePost> get posts => _posts;
+import 'Items_api_model.dart';
+import 'item_create_datamodel.dart';
 
 
+class ItemsDataProvider with ChangeNotifier{
+
+  List<ItemsCreatePostModel> _posts = [];
+  List<ItemsCreatePostModel> get posts => _posts;
 
 
-// Future<RazorPayModel> fetchData() async {
-  Future<List<Item>> fetchData() async {
+
+  Future<List<Item>> ItemsfetchData() async {
     String username = 'rzp_test_spCetGguNd0T6X';
     String password = 'z1ibOqW8JOo5sjDpqQ7bR3RL';
     String basicAuth = 'Basic ' + base64Encode(utf8.encode('$username:$password'));
 
-    final response = await http.get(Uri.parse('https://api.razorpay.com/v1/customers'), headers: {
+    final response = await http.get(Uri.parse('https://api.razorpay.com/v1/items'), headers: {
       "Authorization" :basicAuth
     });
 
@@ -34,22 +34,18 @@ class CustomersProvider extends ChangeNotifier{
     } else {
       throw Exception('Failed to load data');
     }
-  }
+
+}
 
 
-
-
-// Modify your createPost function
-
-
-  Future<CustomersCreatePost> createPost(CustomersCreatePost post, BuildContext context) async {
+  Future<ItemsCreatePostModel> itemsCreatePost(ItemsCreatePostModel post, BuildContext context) async {
     try {
       String username = 'rzp_test_spCetGguNd0T6X';
       String password = 'z1ibOqW8JOo5sjDpqQ7bR3RL';
       String basicAuth = 'Basic ' + base64Encode(utf8.encode('$username:$password'));
 
       var postResponse = await http.post(
-        Uri.parse("https://api.razorpay.com/v1/customers"),
+        Uri.parse("https://api.razorpay.com/v1/items"),
         body: jsonEncode(post), // Pass the actual instance to jsonEncode
 
         headers: {
@@ -63,7 +59,7 @@ class CustomersProvider extends ChangeNotifier{
       print('Post Response Status Code: ${postResponse.statusCode}');
 
       if (postResponse.statusCode >= 200 && postResponse.statusCode < 300) {
-        final newPost = CustomersCreatePost.fromJson(jsonDecode(postResponse.body));
+        final newPost = ItemsCreatePostModel.fromJson(jsonDecode(postResponse.body));
         _posts.add(newPost); // Add the new post to the list
         notifyListeners(); // Notify listeners about the change
 
@@ -89,24 +85,58 @@ class CustomersProvider extends ChangeNotifier{
     }
   }
 
+  List<Item> _items = [];
+  List<Item> get item => _items;
+   Future<void> deleteItem(String itemId, BuildContext context) async {
+     String username = 'rzp_test_spCetGguNd0T6X';
+     String password = 'z1ibOqW8JOo5sjDpqQ7bR3RL';
+     String basicAuth = 'Basic ' + base64Encode(utf8.encode('$username:$password'));
+    try {
+      var deleteResponse = await http.delete(
+        Uri.parse("https://api.razorpay.com/v1/items/$itemId"),
+        headers: {"Authorization" :basicAuth},
+      );
+
+      if (deleteResponse.statusCode == 200) {
+        // Item successfully deleted
+        _items.removeWhere((item) => item.id == itemId); // Remove the item from the list
+        notifyListeners(); // Notify listeners about the change
+
+        // Show a Snackbar
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Item deleted successfully'),
+            duration: Duration(seconds: 2), // You can adjust the duration as needed
+          ),
+        );
+      } else {
+        throw Exception('Failed to delete item');
+      }
+    } catch (e) {
+      throw Exception('delete failed: $e');
+
+    }
+  }
 
 
-  Future<Item> updateCustomer(String customerId, String newName, String newEmail, String newContact) async {
+  Future<Item> itemupdateCustomer(String itemId, String updateName, String updateDesc, String updateAmount,String updateCurrency) async {
     try {
       String username = 'rzp_test_spCetGguNd0T6X';
       String password = 'z1ibOqW8JOo5sjDpqQ7bR3RL';
       String basicAuth = 'Basic ${base64Encode(utf8.encode('$username:$password'))}';
 
-      final response = await http.put(
-        Uri.parse('https://api.razorpay.com/v1/customers/$customerId'),
+      final response = await http.patch(
+        Uri.parse('https://api.razorpay.com/v1/items/$itemId'),
         headers: {
           "Authorization": basicAuth,
           "Content-Type": "application/json",
         },
         body: jsonEncode({
-          "name": newName,
-          "email": newEmail,
-          "contact": newContact,
+          "name": updateName,
+          "description": updateDesc,
+          "amount": int.parse(updateAmount),
+          "currency": updateCurrency,
+
         }),
       );
 
@@ -115,9 +145,9 @@ class CustomersProvider extends ChangeNotifier{
         Item updatedItem = Item.fromJson(data);
         // Notify listeners or update the state as needed
         Fluttertoast.showToast(
-            msg: "Data updated successfully",
-            toastLength: Toast.LENGTH_SHORT,
-           textColor: Colors.white,
+          msg: "Data updated successfully",
+          toastLength: Toast.LENGTH_SHORT,
+          textColor: Colors.white,
           backgroundColor: Colors.pink,
 
         );
@@ -132,27 +162,32 @@ class CustomersProvider extends ChangeNotifier{
     }
   }
 
+  Future<List<Item>?> itemgetDataById() async {
+    try {
+      String username = 'rzp_test_spCetGguNd0T6X';
+      String password = 'z1ibOqW8JOo5sjDpqQ7bR3RL';
+      String basicAuth = 'Basic ' + base64Encode(utf8.encode('$username:$password'));
 
+      final response = await http.get(Uri.parse('https://api.razorpay.com/v1/items/item_NMMVavdligOW0z'), headers: {
+        "Authorization" :basicAuth
+      });
 
-  Future<List<Item>> getDataById() async {
-    String username = 'rzp_test_spCetGguNd0T6X';
-    String password = 'z1ibOqW8JOo5sjDpqQ7bR3RL';
-    String basicAuth = 'Basic ' + base64Encode(utf8.encode('$username:$password'));
+      print(response);
 
-    final response = await http.get(Uri.parse('https://api.razorpay.com/v1/customers/cust_NLme5SjRK0OV16'), headers: {
-      "Authorization" :basicAuth
-    });
-
-    print(response);
-
-    if (response.statusCode == 200) {
-      dynamic data = json.decode(response.body);
-      List<Item> itemList = [Item.fromJson(data)];
-      return itemList;
-    } else {
-      throw Exception('Failed to load data');
+      if (response.statusCode == 200) {
+        dynamic data = json.decode(response.body);
+        List<Item> itemList = [Item.fromJson(data)];
+        return itemList;
+      } else {
+        throw Exception('Failed to load data');
+      }
+    } catch (e) {
+      print('Error in itemgetDataById: $e');
+      return null;
     }
   }
 
 
+
 }
+
