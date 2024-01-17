@@ -21,10 +21,10 @@ void main() {
           child: MyApp(),
         ),
 
-        // ChangeNotifierProvider<ItemsDataProvider>(
-        //   create: (_) => ItemsDataProvider(),
-        //
-        // )
+        ChangeNotifierProvider<ItemsDataProvider>(
+          create: (_) => ItemsDataProvider(),
+
+        )
       ],
       child: MyApp(),
     ),

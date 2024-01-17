@@ -29,6 +29,7 @@ class ItemsDataProvider with ChangeNotifier{
       dynamic data = json.decode(response.body);
       List<dynamic> items = data['items'];
       var itemList = items.map((e) => Item.fromJson(e)).toList();
+      notifyListeners();
       return itemList;
       // return  RazorPayModel.fromJson(data);
     } else {
